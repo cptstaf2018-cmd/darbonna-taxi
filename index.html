@@ -1072,29 +1072,40 @@
   </a>
 
   <script>
-    // Hero: cycle 3D_VIDEO1 → 3D_VIDEO2 → 3D_VIDEO1 … (desktop only)
-    if (window.matchMedia('(min-width: 769px)').matches) {
+    (function () {
       var heroVideos = ['3D_VIDEO1.mp4', '3D_VIDEO2.mp4'];
-      var heroIdx   = 0;
-      var heroVid   = document.getElementById('hero-vid');
+      var heroIdx = 0;
+      var heroVid = document.getElementById('hero-vid');
+      if (!heroVid) return;
 
-      // smooth cross-fade between clips
-      heroVid.style.transition = 'opacity 0.6s ease';
+      heroVid.style.opacity = '0';
+      heroVid.style.transition = 'opacity 0.5s ease';
 
-      function playHeroNext() {
-        heroVid.style.opacity = '0';
-        setTimeout(function () {
-          heroVid.src = heroVideos[heroIdx];
-          heroIdx = (heroIdx + 1) % heroVideos.length;
-          heroVid.load();
-          heroVid.play().catch(function () {});
-          heroVid.style.opacity = '1';
-        }, 300);
+      function loadAndPlay(idx) {
+        heroVid.src = heroVideos[idx];
+        heroVid.load();
       }
 
-      heroVid.addEventListener('ended', playHeroNext);
-      playHeroNext(); // kick off immediately
-    }
+      heroVid.addEventListener('canplay', function () {
+        heroVid.play().catch(function () {});
+        heroVid.style.opacity = '1';
+      });
+
+      heroVid.addEventListener('ended', function () {
+        heroVid.style.opacity = '0';
+        heroIdx = (heroIdx + 1) % heroVideos.length;
+        setTimeout(function () { loadAndPlay(heroIdx); }, 400);
+      });
+
+      heroVid.addEventListener('error', function () {
+        heroIdx = (heroIdx + 1) % heroVideos.length;
+        loadAndPlay(heroIdx);
+      });
+
+      if (window.matchMedia('(min-width: 769px)').matches) {
+        loadAndPlay(0);
+      }
+    })();
   </script>
 </body>
 </html>
